@@ -14,7 +14,6 @@ Args:
 	pd: 2dseq file for proton density scan
 	mt: 2dseq file for MT scan
 
-
 	at1: Flip angle of T1 scan (default=20)
 	apd: Flip angle of PD scan (default=6)
 	amt: Flip angle of MT scan (default=6)
