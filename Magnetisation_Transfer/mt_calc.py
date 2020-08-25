@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 """
 Tool to calculate magnetic transfer saturation image from Bruker MRI scans.
 
@@ -7,20 +5,18 @@ Assumes you have MRtrix and nanconvert_bruker installed, and in the $PATH.
 PvDataset should already be extracted. Run --help to see usage.
 
 Args:
-	save_file: File to save the output image
-	singlecho: Single echo sequences, no averaging needed
+    save_file: File to save the output image
+    singlecho: Single echo sequences, no averaging needed
+    t1_file: 2dseq file for T1 weighted scan
+    pd_file: 2dseq file for proton density scan
+    mt_file: 2dseq file for MT scan
 
-	t1: 2dseq file for T1 weighted scan
-	pd: 2dseq file for proton density scan
-	mt: 2dseq file for MT scan
-
-	at1: Flip angle of T1 scan (default=20)
-	apd: Flip angle of PD scan (default=6)
-	amt: Flip angle of MT scan (default=6)
-	TRt1: TR for T1 scan in ms (default=18)
-	TRpd: TR for PD scan in ms (default=25)
-	TRmt: TR for MT scan in ms (default=25)
-	
+    at1: Flip angle of T1 scan (default=20)
+    apd: Flip angle of PD scan (default=6)
+    amt: Flip angle of MT scan (default=6)
+    TRt1: TR for T1 scan in ms (default=18)
+    TRpd: TR for PD scan in ms (default=25)
+    TRmt: TR for MT scan in ms (default=25)
 """
 
 import argparse
@@ -42,7 +38,7 @@ parser.add_argument("--amt", type=int, help="MT scan flip angle (default 6)", de
 parser.add_argument("--TRt1", type=int, help="T1 scan TR (default 18)", default=18)
 parser.add_argument("--TRpd", type=int, help="PD scan TR (default 25)", default=25)
 parser.add_argument("--TRmt", type=int, help="MT scan TR (default 25)", default=25)
-args=parser.parse_args()
+args = parser.parse_args()
 
 # First create a working directory
 tempfile.tempdir = '.'
@@ -83,7 +79,7 @@ TRmt = args.TRmt
 R1 = f"{tempdir}/R1.nii"
 R2 = f"{tempdir}/R2.nii"
 R = f"{tempdir}/R.nii"
-subprocess.run(["mrcalc", t1, f"{at1/TRt1}", "-mult", f"{apd/TRpd}", pd, "-mult", "-sub", R1])
+subprocess.run(["mrcalc", t1, f"{at1 / TRt1}", "-mult", f"{apd / TRpd}", pd, "-mult", "-sub", R1])
 subprocess.run(["mrcalc", pd, f"{apd}", "-div", t1, f"{at1}", "-div", "-sub", R2])
 subprocess.run(["mrcalc", R1, R2, "-div", "2", "-div", R])
 
@@ -114,5 +110,3 @@ subprocess.run(["mrcalc", f"{TRmt}", R, "-mult", M2])
 subprocess.run(["mrcalc", M1, M2, "-mult", f"{M3}", "-sub", mtsat])
 
 exit()
-
-
