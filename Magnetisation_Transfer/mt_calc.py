@@ -32,6 +32,7 @@ parser.add_argument("pd_file", help="PD scan (2dseq file)")
 parser.add_argument("mt_file", help="MT scan (2dseq file)")
 parser.add_argument("save_file", help="output file name (must end in appropriate file extension")
 parser.add_argument("--singleecho", help="single echo scans performed", action="store_true")
+parser.add_argument("--nocleanup", help="do not remove temporary folder", action="store_true")
 parser.add_argument("--at1", type=int, help="T1 scan flip angle (default 20)", default=20)
 parser.add_argument("--apd", type=int, help="PD scan flip angle (default 6)", default=6)
 parser.add_argument("--amt", type=int, help="MT scan flip angle (default 6)", default=6)
@@ -108,5 +109,10 @@ mtsat = "mtsat.nii"
 subprocess.run(["mrcalc", A, f"{amt}", "-mult", mt, "-div", "1", "-sub", M1])
 subprocess.run(["mrcalc", f"{TRmt}", R, "-mult", M2])
 subprocess.run(["mrcalc", M1, M2, "-mult", f"{M3}", "-sub", mtsat])
+
+# Delete the temporary files, unless --nocleanup specified
+if args.nocleanup:
+    print(f"Attempting to remove temporary directory {tempdir}")
+    subprocess.run(["rm", "-r", "-I", f"{tempdir}"])
 
 exit()
