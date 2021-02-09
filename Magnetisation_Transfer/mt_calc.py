@@ -11,6 +11,7 @@ Args:
     mt_file: 2dseq file for MT scan
     save_file: File to save the output image
 
+    nocleanup: Do not remove temporary files
     gauss: Apply a gaussian filter of nxnxn (default=0 i.e. no filter)
     at1: Flip angle of T1 scan (default=20)
     apd: Flip angle of PD scan (default=6)
@@ -33,6 +34,7 @@ parser.add_argument("pd_file", help="PD scan (2dseq file)")
 parser.add_argument("mt_file", help="MT scan (2dseq file)")
 parser.add_argument("save_file", help="output file name (must end in appropriate file extension")
 parser.add_argument("--singleecho", help="single echo scans performed", action="store_true")
+parser.add_argument("--nocleanup", help="do not remove temporary folder", action="store_true")
 parser.add_argument("--gauss", type=int, help="Apply a gaussian filter of NxNxN (default=0=NO FILTER)", default=0)
 parser.add_argument("--at1", type=int, help="T1 scan flip angle (default 20)", default=20)
 parser.add_argument("--apd", type=int, help="PD scan flip angle (default 6)", default=6)
@@ -118,5 +120,10 @@ M3 = amt * amt / 2
 subprocess.run(["mrcalc", A, f"{amt}", "-mult", mt, "-div", "1", "-sub", M1])
 subprocess.run(["mrcalc", f"{TRmt}", R, "-mult", M2])
 subprocess.run(["mrcalc", M1, M2, "-mult", f"{M3}", "-sub", args.save_file])
+
+# Delete the temporary files, unless --nocleanup specified
+if args.nocleanup:
+    print(f"Attempting to remove temporary directory {tempdir}")
+    subprocess.run(["rm", "-r", "-I", f"{tempdir}"])
 
 exit()
