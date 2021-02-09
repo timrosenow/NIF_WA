@@ -5,12 +5,13 @@ Assumes you have MRtrix and nanconvert_bruker installed, and in the $PATH.
 PvDataset should already be extracted. Run --help to see usage.
 
 Args:
-    save_file: File to save the output image
     singlecho: Single echo sequences, no averaging needed
     t1_file: 2dseq file for T1 weighted scan
     pd_file: 2dseq file for proton density scan
     mt_file: 2dseq file for MT scan
+    save_file: File to save the output image
 
+    gauss: Apply a gaussian filter of nxnxn (default=0 i.e. no filter)
     at1: Flip angle of T1 scan (default=20)
     apd: Flip angle of PD scan (default=6)
     amt: Flip angle of MT scan (default=6)
@@ -32,6 +33,7 @@ parser.add_argument("pd_file", help="PD scan (2dseq file)")
 parser.add_argument("mt_file", help="MT scan (2dseq file)")
 parser.add_argument("save_file", help="output file name (must end in appropriate file extension")
 parser.add_argument("--singleecho", help="single echo scans performed", action="store_true")
+parser.add_argument("--gauss", type=int, help="Apply a gaussian filter of NxNxN (default=0=NO FILTER)", default=0)
 parser.add_argument("--at1", type=int, help="T1 scan flip angle (default 20)", default=20)
 parser.add_argument("--apd", type=int, help="PD scan flip angle (default 6)", default=6)
 parser.add_argument("--amt", type=int, help="MT scan flip angle (default 6)", default=6)
@@ -63,6 +65,16 @@ if not args.singleecho:
     subprocess.run(["mrmath", mt, "mean", f"{tempdir}/mt_avg.nii", "-axis", "3"])
     mt = f"{tempdir}/mt_avg.nii"
 
+# Apply a gaussian filter, if --gauss argument is provided and > 0
+gauss = args.gauss
+if gauss > 0:
+    subprocess.run(["mrfilter", t1, "smooth", f"{tempdir}/t1_filtered.nii", "-extent", gauss])
+    t1 = f"{tempdir}/t1_filtered.nii"
+    subprocess.run(["mrfilter", pd, "smooth", f"{tempdir}/pd_filtered.nii", "-extent", gauss])
+    pd = f"{tempdir}/pd_filtered.nii"
+    subprocess.run(["mrfilter", mt, "smooth", f"{tempdir}/mt_filtered.nii", "-extent", gauss])
+    mt = f"{tempdir}/mt_filtered.nii"
+
 # The analysis is based on the Hagiwara 2018 paper (which is based on Helms 2008)
 # For simplicity of typing, we will rename some of these variables
 at1 = args.at1
@@ -87,7 +99,6 @@ subprocess.run(["mrcalc", R1, R2, "-div", "2", "-div", R])
 # A1 = pd x t1 x ( (TRpd x at1 / apd) - (TRt1 x apd / at1))
 # A2 = TRpd x at1 x t1 - TRt1 x apd x pd
 # A = A1 / A2
-
 A1 = f"{tempdir}/A1.nii"
 A2 = f"{tempdir}/A2.nii"
 A = f"{tempdir}/A.nii"
@@ -103,10 +114,9 @@ subprocess.run(["mrcalc", A1, A2, "-div", A])
 M1 = f"{tempdir}/M1.nii"
 M2 = f"{tempdir}/M2.nii"
 M3 = amt * amt / 2
-mtsat = "mtsat.nii"
 
 subprocess.run(["mrcalc", A, f"{amt}", "-mult", mt, "-div", "1", "-sub", M1])
 subprocess.run(["mrcalc", f"{TRmt}", R, "-mult", M2])
-subprocess.run(["mrcalc", M1, M2, "-mult", f"{M3}", "-sub", mtsat])
+subprocess.run(["mrcalc", M1, M2, "-mult", f"{M3}", "-sub", args.save_file])
 
 exit()
