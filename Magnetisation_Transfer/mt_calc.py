@@ -70,11 +70,11 @@ if not args.singleecho:
 # Apply a gaussian filter, if --gauss argument is provided and > 0
 gauss = args.gauss
 if gauss > 0:
-    subprocess.run(["mrfilter", t1, "smooth", f"{tempdir}/t1_filtered.nii", "-extent", gauss])
+    subprocess.run(["mrfilter", t1, "smooth", f"{tempdir}/t1_filtered.nii", "-extent", f"{gauss}"])
     t1 = f"{tempdir}/t1_filtered.nii"
-    subprocess.run(["mrfilter", pd, "smooth", f"{tempdir}/pd_filtered.nii", "-extent", gauss])
+    subprocess.run(["mrfilter", pd, "smooth", f"{tempdir}/pd_filtered.nii", "-extent", f"{gauss}"])
     pd = f"{tempdir}/pd_filtered.nii"
-    subprocess.run(["mrfilter", mt, "smooth", f"{tempdir}/mt_filtered.nii", "-extent", gauss])
+    subprocess.run(["mrfilter", mt, "smooth", f"{tempdir}/mt_filtered.nii", "-extent", f"{gauss}"])
     mt = f"{tempdir}/mt_filtered.nii"
 
 # The analysis is based on the Hagiwara 2018 paper (which is based on Helms 2008)
@@ -122,7 +122,7 @@ subprocess.run(["mrcalc", f"{TRmt}", R, "-mult", M2])
 subprocess.run(["mrcalc", M1, M2, "-mult", f"{M3}", "-sub", args.save_file])
 
 # Delete the temporary files, unless --nocleanup specified
-if args.nocleanup:
+if not args.nocleanup:
     print(f"Attempting to remove temporary directory {tempdir}")
     subprocess.run(["rm", "-r", "-I", f"{tempdir}"])
 
