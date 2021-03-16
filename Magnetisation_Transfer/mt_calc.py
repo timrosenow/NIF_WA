@@ -13,6 +13,7 @@ Args:
 
     nocleanup: Do not remove temporary files
     gauss: Apply a gaussian filter of nxnxn (default=0 i.e. no filter)
+    degibbs: Remove Gibbs rings with mrdegibbs before processing
     at1: Flip angle of T1 scan (default=20)
     apd: Flip angle of PD scan (default=6)
     amt: Flip angle of MT scan (default=6)
@@ -36,6 +37,7 @@ parser.add_argument("save_file", help="output file name (must end in appropriate
 parser.add_argument("--singleecho", help="single echo scans performed", action="store_true")
 parser.add_argument("--nocleanup", help="do not remove temporary folder", action="store_true")
 parser.add_argument("--gauss", type=int, help="Apply a gaussian filter of NxNxN (default=0=NO FILTER)", default=0)
+parser.add_argument("--degibbs", help="remove Gibbs rings (mrdegibbs)", action="store_true")
 parser.add_argument("--at1", type=int, help="T1 scan flip angle (default 20)", default=20)
 parser.add_argument("--apd", type=int, help="PD scan flip angle (default 6)", default=6)
 parser.add_argument("--amt", type=int, help="MT scan flip angle (default 6)", default=6)
@@ -66,6 +68,15 @@ if not args.singleecho:
     pd = f"{tempdir}/pd_avg.nii"
     subprocess.run(["mrmath", mt, "mean", f"{tempdir}/mt_avg.nii", "-axis", "3"])
     mt = f"{tempdir}/mt_avg.nii"
+
+# If degibbs option is enabled, run mrdegibbs on the output images (after averaging)
+if args.degibbs:
+    subprocess.run(["mrdegibbs", t1, f"{tempdir}/t1_degibbs.nii"])
+    t1 = f"{tempdir}/t1_degibbs.nii"
+    subprocess.run(["mrdegibbs", pd, f"{tempdir}/pd_degibbs.nii"])
+    pd = f"{tempdir}/pd_degibbs.nii"
+    subprocess.run(["mrdegibbs", mt, f"{tempdir}/mt_degibbs.nii"])
+    mt = f"{tempdir}/mt_degibbs.nii"
 
 # Apply a gaussian filter, if --gauss argument is provided and > 0
 gauss = args.gauss
